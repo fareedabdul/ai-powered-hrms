@@ -13,7 +13,7 @@ function RatingInput({ label, value, onChange }) {
       <div style={{ display:"flex", gap:"6px" }}>
         {[1,2,3,4,5].map(n => (
           <button key={n} onClick={() => onChange(n)}
-            style={{ width:"36px", height:"36px", borderRadius:"8px", border:"1px solid var(--border)", background: value >= n ? "var(--accent)" : "var(--surface-2)", color: value >= n ? "#fff" : "var(--text-3)", cursor:"pointer", fontSize:"13px", fontWeight:600, transition:"all 0.15s" }}>
+            style={{ width:"36px", height:"36px", borderRadius:"8px", border:"1px solid var(--border)", background:value>=n?"var(--accent)":"var(--surface-2)", color:value>=n?"#fff":"var(--text-3)", cursor:"pointer", fontSize:"13px", fontWeight:600, transition:"all 0.15s" }}>
             {n}
           </button>
         ))}
@@ -27,14 +27,11 @@ export default function PerformanceReviews({ toast }) {
   const [employees, setEmployees] = useState([]);
   const [selected,  setSelected]  = useState(null);
   const [loading,   setLoading]   = useState(false);
-  const [view,      setView]      = useState("list"); // list | new | detail
+  const [view,      setView]      = useState("list");
   const [mgr, setMgr] = useState({ quality:0, delivery:0, communication:0, initiative:0, teamwork:0, manager_notes:"" });
   const [form, setForm] = useState({ employee_id:"", period:"", achievements:"", challenges:"", goals:"" });
 
-  useEffect(() => {
-    getAllReviews().then(setReviews);
-    getEmployees().then(setEmployees);
-  }, []);
+  useEffect(() => { getAllReviews().then(setReviews); getEmployees().then(setEmployees); }, []);
 
   const handleCreate = async () => {
     if (!form.employee_id || !form.period) { toast("Fill employee and period.", "error"); return; }
@@ -42,8 +39,7 @@ export default function PerformanceReviews({ toast }) {
     try {
       await createReview({ ...form, employee_id: parseInt(form.employee_id) });
       getAllReviews().then(setReviews);
-      setView("list");
-      toast("Review created!", "success");
+      setView("list"); toast("Review created!", "success");
     } catch { toast("Failed.", "error"); }
     finally { setLoading(false); }
   };
@@ -65,14 +61,14 @@ export default function PerformanceReviews({ toast }) {
       getAllReviews().then(setReviews);
       setSelected(updated);
       toast("AI review generated!", "success");
-    } catch { toast("Failed to generate AI review.", "error"); }
+    } catch { toast("Failed.", "error"); }
     finally { setLoading(false); }
   };
 
   const empName = (id) => employees.find(e => e.id === id)?.name || `#${id}`;
   const avg = (r) => {
     const vals = RATINGS.map(k => r[k]).filter(Boolean);
-    return vals.length ? (vals.reduce((a,b) => a+b,0) / vals.length).toFixed(1) : null;
+    return vals.length ? (vals.reduce((a,b)=>a+b,0)/vals.length).toFixed(1) : null;
   };
 
   if (view === "new") return (
@@ -84,14 +80,14 @@ export default function PerformanceReviews({ toast }) {
       <div className="form-grid">
         <div className="input-wrap">
           <label className="input-label">Employee</label>
-          <select value={form.employee_id} onChange={e => setForm({...form, employee_id:e.target.value})}>
+          <select value={form.employee_id} onChange={e => setForm({...form,employee_id:e.target.value})}>
             <option value="">Select employee</option>
             {employees.map(e => <option key={e.id} value={e.id}>{e.name}</option>)}
           </select>
         </div>
         <div className="input-wrap">
           <label className="input-label">Period</label>
-          <input placeholder="e.g. Q2 2025" value={form.period} onChange={e => setForm({...form, period:e.target.value})} />
+          <input placeholder="e.g. Q2 2025" value={form.period} onChange={e => setForm({...form,period:e.target.value})} />
         </div>
         {[["achievements","Achievements","Key wins this period..."],["challenges","Challenges","Obstacles faced..."],["goals","Goals for Next Period","Next period targets..."]].map(([key,label,ph]) => (
           <div key={key} className="input-wrap" style={{ gridColumn:"1/-1" }}>
@@ -113,11 +109,9 @@ export default function PerformanceReviews({ toast }) {
         <button className="btn btn-ghost btn-sm" onClick={() => setView("list")}>← Back</button>
         <div>
           <div style={{ fontFamily:"var(--font-display)", fontWeight:700, fontSize:"18px", color:"var(--text-1)" }}>{empName(selected.employee_id)}</div>
-          <div style={{ fontSize:"12px", color:"var(--text-2)" }}>Period: {selected.period} · Status: <span style={{ color: selected.status === "submitted" ? "var(--success)" : "var(--warning)" }}>{selected.status}</span></div>
+          <div style={{ fontSize:"12px", color:"var(--text-2)" }}>Period: {selected.period} · <span style={{ color:selected.status==="submitted"?"var(--success)":"var(--warning)" }}>{selected.status}</span></div>
         </div>
       </div>
-
-      {/* Self assessment */}
       <div className="form-panel" style={{ margin:0 }}>
         <p className="section-label">Self Assessment</p>
         {[["achievements","Achievements"],["challenges","Challenges"],["goals","Goals"]].map(([k,l]) => selected[k] && (
@@ -127,33 +121,25 @@ export default function PerformanceReviews({ toast }) {
           </div>
         ))}
       </div>
-
-      {/* Manager ratings */}
       <div className="form-panel" style={{ margin:0 }}>
         <p className="section-label">Manager Ratings</p>
         {RATINGS.map(r => (
-          <RatingInput key={r} label={r.charAt(0).toUpperCase()+r.slice(1)}
-            value={mgr[r] || selected[r] || 0}
-            onChange={v => setMgr(prev => ({...prev, [r]:v}))} />
+          <RatingInput key={r} label={r.charAt(0).toUpperCase()+r.slice(1)} value={mgr[r]||selected[r]||0} onChange={v => setMgr(prev=>({...prev,[r]:v}))} />
         ))}
         <div className="input-wrap" style={{ marginTop:"12px", marginBottom:"16px" }}>
           <label className="input-label">Manager Notes</label>
-          <textarea value={mgr.manager_notes || selected.manager_notes || ""}
-            onChange={e => setMgr(p => ({...p, manager_notes:e.target.value}))}
-            placeholder="Add notes..."
+          <textarea value={mgr.manager_notes||selected.manager_notes||""} onChange={e => setMgr(p=>({...p,manager_notes:e.target.value}))} placeholder="Add notes..."
             style={{ width:"100%", minHeight:"80px", padding:"10px 14px", background:"var(--surface-2)", border:"1px solid var(--border)", borderRadius:"var(--radius-md)", color:"var(--text-1)", fontFamily:"var(--font-body)", fontSize:"14px", outline:"none", resize:"vertical" }} />
         </div>
         <div style={{ display:"flex", gap:"10px" }}>
           <button className="btn btn-primary btn-sm" onClick={handleManagerSubmit} disabled={loading}>
-            {loading ? <><span className="spinner"/>Saving...</> : "Submit Manager Review"}
+            {loading?<><span className="spinner"/>Saving...</>:"Submit Manager Review"}
           </button>
           <button className="btn btn-warning btn-sm" onClick={handleAI} disabled={loading}>
-            {loading ? <><span className="spinner"/>Generating...</> : "✦ Generate AI Review"}
+            {loading?<><span className="spinner"/>Generating...</>:"✦ Generate AI Review"}
           </button>
         </div>
       </div>
-
-      {/* AI Output */}
       {selected.ai_summary && (
         <div className="form-panel" style={{ margin:0 }}>
           <p className="section-label">AI Review Output</p>
@@ -171,32 +157,39 @@ export default function PerformanceReviews({ toast }) {
   return (
     <div>
       <div style={{ display:"flex", justifyContent:"space-between", alignItems:"center", marginBottom:"20px" }}>
-        <p className="section-label" style={{ margin:0 }}>{reviews.length} reviews</p>
+        <p className="section-label" style={{ margin:0 }}>{reviews.length} review{reviews.length!==1?"s":""}</p>
         <button className="btn btn-primary btn-sm" onClick={() => setView("new")}>+ New Review</button>
       </div>
-      {reviews.length === 0
-        ? <div className="empty-state"><div className="empty-icon">📋</div><div className="empty-title">No reviews yet</div><div className="empty-sub">Start a new performance review cycle.</div></div>
-        : <div style={{ display:"flex", flexDirection:"column", gap:"10px" }}>
-            {reviews.map(r => (
-              <div key={r.id} onClick={() => { setSelected(r); setMgr({ quality:0,delivery:0,communication:0,initiative:0,teamwork:0,manager_notes:"" }); setView("detail"); }}
-                style={{ background:"var(--surface)", border:"1px solid var(--border)", borderRadius:"var(--radius-lg)", padding:"16px 20px", display:"flex", alignItems:"center", gap:"16px", cursor:"pointer", transition:"border-color 0.2s" }}
-                onMouseEnter={e => e.currentTarget.style.borderColor = "var(--border-md)"}
-                onMouseLeave={e => e.currentTarget.style.borderColor = "var(--border)"}>
-                <div style={{ flex:1 }}>
-                  <div style={{ fontFamily:"var(--font-display)", fontWeight:600, fontSize:"14px", color:"var(--text-1)", marginBottom:"3px" }}>{empName(r.employee_id)}</div>
-                  <div style={{ fontSize:"12px", color:"var(--text-2)" }}>Period: {r.period}</div>
-                </div>
-                {avg(r) && <div style={{ fontSize:"20px", fontWeight:700, color:"var(--accent)", fontFamily:"var(--font-display)" }}>{avg(r)}<span style={{ fontSize:"11px", color:"var(--text-3)" }}>/5</span></div>}
-                <span style={{ padding:"3px 12px", borderRadius:"100px", fontSize:"11px", fontWeight:700,
-                  background: r.status==="submitted" ? "rgba(52,211,153,0.1)" : "rgba(251,191,36,0.1)",
-                  color: r.status==="submitted" ? "var(--success)" : "var(--warning)",
-                  border: `1px solid ${r.status==="submitted" ? "rgba(52,211,153,0.3)" : "rgba(251,191,36,0.3)"}` }}>
-                  {r.status}
-                </span>
-              </div>
-            ))}
+      {reviews.length === 0 ? (
+        <div className="module-empty">
+          <div className="module-empty-icon">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+              <rect x="6" y="4" width="20" height="24" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+              <path d="M11 12h10M11 17h10M11 22h6" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
           </div>
-      }
+          <div className="module-empty-title">No reviews yet</div>
+          <div className="module-empty-sub">Start a new performance review cycle by clicking the button above.</div>
+        </div>
+      ) : (
+        <div style={{ display:"flex", flexDirection:"column", gap:"10px" }}>
+          {reviews.map(r => (
+            <div key={r.id} onClick={() => { setSelected(r); setMgr({quality:0,delivery:0,communication:0,initiative:0,teamwork:0,manager_notes:""}); setView("detail"); }}
+              style={{ background:"var(--surface)", border:"1px solid var(--border)", borderRadius:"var(--radius-lg)", padding:"16px 20px", display:"flex", alignItems:"center", gap:"16px", cursor:"pointer", transition:"border-color 0.2s" }}
+              onMouseEnter={e=>e.currentTarget.style.borderColor="var(--border-md)"}
+              onMouseLeave={e=>e.currentTarget.style.borderColor="var(--border)"}>
+              <div style={{ flex:1 }}>
+                <div style={{ fontFamily:"var(--font-display)", fontWeight:600, fontSize:"14px", color:"var(--text-1)", marginBottom:"3px" }}>{empName(r.employee_id)}</div>
+                <div style={{ fontSize:"12px", color:"var(--text-2)" }}>Period: {r.period}</div>
+              </div>
+              {avg(r) && <div style={{ fontSize:"20px", fontWeight:700, color:"var(--accent)", fontFamily:"var(--font-display)" }}>{avg(r)}<span style={{ fontSize:"11px", color:"var(--text-3)" }}>/5</span></div>}
+              <span style={{ padding:"3px 12px", borderRadius:"100px", fontSize:"11px", fontWeight:700, background:r.status==="submitted"?"rgba(52,211,153,0.1)":"rgba(251,191,36,0.1)", color:r.status==="submitted"?"var(--success)":"var(--warning)", border:`1px solid ${r.status==="submitted"?"rgba(52,211,153,0.3)":"rgba(251,191,36,0.3)"}` }}>
+                {r.status}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
