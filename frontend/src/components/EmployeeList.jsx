@@ -18,14 +18,6 @@ export default function EmployeeList({ employees, generateBio, deleteEmployee, o
     return matchSearch && matchDept && matchStatus;
   });
 
-  if (!employees?.length) return (
-    <div className="empty-state">
-      <div className="empty-icon">👥</div>
-      <div className="empty-title">No employees yet</div>
-      <div className="empty-sub">Add your first employee using the form above.</div>
-    </div>
-  );
-
   return (
     <div>
       <div className="toolbar">
@@ -35,28 +27,40 @@ export default function EmployeeList({ employees, generateBio, deleteEmployee, o
           </span>
           <input className="search-input" placeholder="Search by name, role or department..." value={search} onChange={e => setSearch(e.target.value)} />
         </div>
-
         <select className="filter-select" value={dept} onChange={e => setDept(e.target.value)}>
           {departments.map(d => <option key={d} value={d}>{d === "All" ? "All departments" : d}</option>)}
         </select>
-
         <select className="filter-select" style={{ width:"140px" }} value={status} onChange={e => setStatus(e.target.value)}>
           <option value="All">All status</option>
           <option value="active">Active</option>
           <option value="inactive">Inactive</option>
         </select>
-
         <button className="btn btn-ghost btn-sm" onClick={exportCSV} title="Export CSV">
           <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M7 1v8M4 6l3 3 3-3M2 10v2a1 1 0 001 1h8a1 1 0 001-1v-2" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           Export CSV
         </button>
       </div>
 
-      <p className="section-label">{filtered.length} of {employees.length} employee{employees.length !== 1 ? "s" : ""}</p>
-
-      {filtered.length === 0
-        ? <div className="empty-state" style={{ padding:"32px 24px" }}><div className="empty-title">No results</div><div className="empty-sub">Try a different search or filter.</div></div>
-        : <div className="emp-grid">
+      {employees.length === 0 ? (
+        <div className="module-empty">
+          <div className="module-empty-icon">
+            <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+              <circle cx="16" cy="10" r="5" stroke="currentColor" strokeWidth="1.5"/>
+              <path d="M6 28c0-5.523 4.477-10 10-10s10 4.477 10 10" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+            </svg>
+          </div>
+          <div className="module-empty-title">No employees yet</div>
+          <div className="module-empty-sub">Add your first employee using the form above to get started.</div>
+        </div>
+      ) : filtered.length === 0 ? (
+        <div className="module-empty" style={{ padding:"32px 24px" }}>
+          <div className="module-empty-title">No results found</div>
+          <div className="module-empty-sub">Try a different search term or filter.</div>
+        </div>
+      ) : (
+        <>
+          <p className="section-label">{filtered.length} of {employees.length} employee{employees.length !== 1 ? "s" : ""}</p>
+          <div className="emp-grid">
             {filtered.map(emp => (
               <EmployeeCard
                 key={emp.id}
@@ -69,7 +73,8 @@ export default function EmployeeList({ employees, generateBio, deleteEmployee, o
               />
             ))}
           </div>
-      }
+        </>
+      )}
     </div>
   );
 }
