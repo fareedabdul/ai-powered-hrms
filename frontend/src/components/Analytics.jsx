@@ -30,9 +30,7 @@ export default function Analytics() {
   const [summary, setSummary] = useState("");
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    getAnalytics().then(setData);
-  }, []);
+  useEffect(() => { getAnalytics().then(setData); }, []);
 
   const handleSummary = async () => {
     setLoading(true);
@@ -41,15 +39,47 @@ export default function Analytics() {
     setLoading(false);
   };
 
-  if (!data) return <div className="empty-state"><div className="empty-sub">Loading analytics...</div></div>;
+  if (!data) return (
+    <div className="module-empty">
+      <div className="module-empty-icon">
+        <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+          <rect x="4" y="18" width="5" height="10" rx="1" stroke="currentColor" strokeWidth="1.5"/>
+          <rect x="13" y="12" width="5" height="16" rx="1" stroke="currentColor" strokeWidth="1.5"/>
+          <rect x="22" y="6" width="5" height="22" rx="1" stroke="currentColor" strokeWidth="1.5"/>
+        </svg>
+      </div>
+      <div className="module-empty-title">Loading analytics...</div>
+    </div>
+  );
 
-  const maxDept = Math.max(...(data.by_dept.map(d => d.count)), 1);
+  if (data.total === 0) return (
+    <div style={{ display:"flex", flexDirection:"column", gap:"24px" }}>
+      <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(160px,1fr))", gap:"12px" }}>
+        <StatCard label="Total Employees" value="0" />
+        <StatCard label="Active"          value="0" color="var(--success)" />
+        <StatCard label="Inactive"        value="0" color="var(--danger)"  />
+        <StatCard label="Bios Generated"  value="0" color="var(--accent)"  />
+        <StatCard label="Attrition Rate"  value="0%" color="var(--warning)" />
+      </div>
+      <div className="module-empty">
+        <div className="module-empty-icon">
+          <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+            <rect x="4" y="18" width="5" height="10" rx="1" stroke="currentColor" strokeWidth="1.5"/>
+            <rect x="13" y="12" width="5" height="16" rx="1" stroke="currentColor" strokeWidth="1.5"/>
+            <rect x="22" y="6" width="5" height="22" rx="1" stroke="currentColor" strokeWidth="1.5"/>
+          </svg>
+        </div>
+        <div className="module-empty-title">No data yet</div>
+        <div className="module-empty-sub">Add employees to start seeing analytics and AI-generated insights.</div>
+      </div>
+    </div>
+  );
+
+  const maxDept = Math.max(...data.by_dept.map(d => d.count), 1);
   const COLORS  = ["var(--accent)", "var(--accent-2)", "var(--success)", "var(--warning)", "var(--danger)"];
 
   return (
     <div style={{ display:"flex", flexDirection:"column", gap:"24px" }}>
-
-      {/* Stat cards */}
       <div style={{ display:"grid", gridTemplateColumns:"repeat(auto-fit, minmax(160px,1fr))", gap:"12px" }}>
         <StatCard label="Total Employees" value={data.total} />
         <StatCard label="Active"          value={data.active}   color="var(--success)" />
@@ -57,19 +87,13 @@ export default function Analytics() {
         <StatCard label="Bios Generated"  value={data.bios}     color="var(--accent)"  />
         <StatCard label="Attrition Rate"  value={`${data.attrition}%`} color="var(--warning)" />
       </div>
-
-      {/* Dept breakdown */}
       <div style={{ background:"var(--surface)", border:"1px solid var(--border)", borderRadius:"var(--radius-xl)", padding:"24px" }}>
         <p className="section-label" style={{ marginBottom:"16px" }}>Headcount by Department</p>
         {data.by_dept.length === 0
           ? <div style={{ color:"var(--text-3)", fontSize:"13px" }}>No department data yet.</div>
-          : data.by_dept.map((d, i) => (
-              <Bar key={d.department} label={d.department} value={d.count} max={maxDept} color={COLORS[i % COLORS.length]} />
-            ))
+          : data.by_dept.map((d, i) => <Bar key={d.department} label={d.department} value={d.count} max={maxDept} color={COLORS[i % COLORS.length]} />)
         }
       </div>
-
-      {/* AI Summary */}
       <div style={{ background:"var(--surface)", border:"1px solid var(--border)", borderRadius:"var(--radius-xl)", padding:"24px" }}>
         <div style={{ display:"flex", alignItems:"center", justifyContent:"space-between", marginBottom:"16px", flexWrap:"wrap", gap:"10px" }}>
           <p className="section-label" style={{ margin:0 }}>AI Monthly Summary</p>
@@ -84,4 +108,4 @@ export default function Analytics() {
       </div>
     </div>
   );
-}
+}v
