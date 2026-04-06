@@ -19,9 +19,7 @@ export default function LeaveManagement({ toast }) {
   }, []);
 
   const handleApply = async () => {
-    if (!form.employee_id || !form.start_date || !form.end_date) {
-      toast("Fill all required fields.", "error"); return;
-    }
+    if (!form.employee_id || !form.start_date || !form.end_date) { toast("Fill all required fields.", "error"); return; }
     setLoading(true);
     try {
       await applyLeave({ ...form, employee_id: parseInt(form.employee_id) });
@@ -84,8 +82,8 @@ export default function LeaveManagement({ toast }) {
             <input type="date" value={form.end_date} onChange={e => setForm({...form, end_date:e.target.value})} />
           </div>
           <div className="input-wrap" style={{ gridColumn:"1/-1" }}>
-            <label className="input-label">Reason</label>
-            <input placeholder="Optional reason..." value={form.reason} onChange={e => setForm({...form, reason:e.target.value})} />
+            <label className="input-label">Reason (optional)</label>
+            <input placeholder="Reason for leave..." value={form.reason} onChange={e => setForm({...form, reason:e.target.value})} />
           </div>
         </div>
         <button className="btn btn-primary" onClick={handleApply} disabled={loading}>
@@ -93,7 +91,7 @@ export default function LeaveManagement({ toast }) {
         </button>
       </div>
 
-      {/* Balance + Pattern Checker */}
+      {/* Balance + Pattern */}
       <div style={{ display:"grid", gridTemplateColumns:"1fr 1fr", gap:"16px" }}>
         <div className="form-panel" style={{ margin:0 }}>
           <p className="section-label">Leave Balance</p>
@@ -104,7 +102,9 @@ export default function LeaveManagement({ toast }) {
             </select>
             <button className="btn btn-ghost btn-sm" onClick={loadBalance}>Check</button>
           </div>
-          {balance && Object.entries(balance).map(([type, data]) => (
+          {!balance ? (
+            <div style={{ fontSize:"13px", color:"var(--text-3)", fontStyle:"italic" }}>Select an employee and click Check to view leave balance.</div>
+          ) : Object.entries(balance).map(([type, data]) => (
             <div key={type} style={{ marginBottom:"10px" }}>
               <div style={{ display:"flex", justifyContent:"space-between", fontSize:"12px", marginBottom:"4px" }}>
                 <span style={{ color:"var(--text-2)" }}>{TYPE_LABELS[type]}</span>
@@ -122,13 +122,13 @@ export default function LeaveManagement({ toast }) {
           <button className="btn btn-warning btn-sm" onClick={loadPatterns} disabled={loading} style={{ marginBottom:"14px" }}>
             {loading ? <><span className="spinner"/>Analyzing...</> : "✦ Detect Patterns"}
           </button>
-          {patterns && (
+          {!patterns ? (
+            <div style={{ fontSize:"13px", color:"var(--text-3)", fontStyle:"italic" }}>Select an employee above and click Detect Patterns to run AI analysis.</div>
+          ) : (
             <div>
               {patterns.patterns.length === 0
                 ? <div style={{ fontSize:"13px", color:"var(--success)" }}>✓ No unusual patterns detected.</div>
-                : patterns.patterns.map((p,i) => (
-                    <div key={i} style={{ fontSize:"12px", color:"var(--warning)", padding:"4px 0" }}>⚠ {p}</div>
-                  ))
+                : patterns.patterns.map((p,i) => <div key={i} style={{ fontSize:"12px", color:"var(--warning)", padding:"4px 0" }}>⚠ {p}</div>)
               }
               {patterns.ai_note && (
                 <div className="card-bio" style={{ marginTop:"12px" }}>
@@ -141,32 +141,42 @@ export default function LeaveManagement({ toast }) {
         </div>
       </div>
 
-      {/* All Leave Requests */}
+      {/* Leave Requests */}
       <div>
-        <p className="section-label">{leaves.length} leave requests</p>
-        {leaves.length === 0
-          ? <div className="empty-state" style={{ padding:"32px" }}><div className="empty-title">No leave requests</div></div>
-          : <div style={{ display:"flex", flexDirection:"column", gap:"10px" }}>
-              {leaves.map(l => (
-                <div key={l.id} style={{ background:"var(--surface)", border:"1px solid var(--border)", borderRadius:"var(--radius-lg)", padding:"16px 20px", display:"flex", alignItems:"center", gap:"16px", flexWrap:"wrap" }}>
-                  <div style={{ flex:1, minWidth:"180px" }}>
-                    <div style={{ fontFamily:"var(--font-display)", fontWeight:600, fontSize:"14px", color:"var(--text-1)", marginBottom:"3px" }}>{empName(l.employee_id)}</div>
-                    <div style={{ fontSize:"12px", color:"var(--text-2)" }}>{TYPE_LABELS[l.leave_type]} · {l.start_date} → {l.end_date}</div>
-                    {l.reason && <div style={{ fontSize:"12px", color:"var(--text-3)", marginTop:"3px" }}>{l.reason}</div>}
-                  </div>
-                  <span style={{ padding:"3px 12px", borderRadius:"100px", fontSize:"11px", fontWeight:700, background:`${STATUS_COLOR[l.status]}18`, color:STATUS_COLOR[l.status], border:`1px solid ${STATUS_COLOR[l.status]}40` }}>
-                    {l.status}
-                  </span>
-                  {l.status === "pending" && (
-                    <div style={{ display:"flex", gap:"6px" }}>
-                      <button className="btn btn-success btn-xs" onClick={() => handleStatus(l.id, "approved")}>Approve</button>
-                      <button className="btn btn-danger btn-xs"  onClick={() => handleStatus(l.id, "rejected")}>Reject</button>
-                    </div>
-                  )}
-                </div>
-              ))}
+        <p className="section-label">{leaves.length} leave request{leaves.length !== 1 ? "s" : ""}</p>
+        {leaves.length === 0 ? (
+          <div className="module-empty">
+            <div className="module-empty-icon">
+              <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
+                <rect x="4" y="6" width="24" height="22" rx="2" stroke="currentColor" strokeWidth="1.5"/>
+                <path d="M4 12h24M10 4v4M22 4v4" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round"/>
+              </svg>
             </div>
-        }
+            <div className="module-empty-title">No leave requests yet</div>
+            <div className="module-empty-sub">Leave requests will appear here once employees apply.</div>
+          </div>
+        ) : (
+          <div style={{ display:"flex", flexDirection:"column", gap:"10px" }}>
+            {leaves.map(l => (
+              <div key={l.id} style={{ background:"var(--surface)", border:"1px solid var(--border)", borderRadius:"var(--radius-lg)", padding:"16px 20px", display:"flex", alignItems:"center", gap:"16px", flexWrap:"wrap" }}>
+                <div style={{ flex:1, minWidth:"180px" }}>
+                  <div style={{ fontFamily:"var(--font-display)", fontWeight:600, fontSize:"14px", color:"var(--text-1)", marginBottom:"3px" }}>{empName(l.employee_id)}</div>
+                  <div style={{ fontSize:"12px", color:"var(--text-2)" }}>{TYPE_LABELS[l.leave_type]} · {l.start_date} → {l.end_date}</div>
+                  {l.reason && <div style={{ fontSize:"12px", color:"var(--text-3)", marginTop:"3px" }}>{l.reason}</div>}
+                </div>
+                <span style={{ padding:"3px 12px", borderRadius:"100px", fontSize:"11px", fontWeight:700, background:`${STATUS_COLOR[l.status]}18`, color:STATUS_COLOR[l.status], border:`1px solid ${STATUS_COLOR[l.status]}40` }}>
+                  {l.status}
+                </span>
+                {l.status === "pending" && (
+                  <div style={{ display:"flex", gap:"6px" }}>
+                    <button className="btn btn-success btn-xs" onClick={() => handleStatus(l.id, "approved")}>Approve</button>
+                    <button className="btn btn-danger btn-xs"  onClick={() => handleStatus(l.id, "rejected")}>Reject</button>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );
