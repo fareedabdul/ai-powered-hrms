@@ -1,4 +1,4 @@
-const BASE_URL = "http://localhost:8000";
+const BASE_URL = "https://hrms-backend-den2.onrender.com";
 
 // ── EMPLOYEES ────────────────────────────────────────────
 export const getEmployees       = async () => (await fetch(`${BASE_URL}/employees`)).json();
